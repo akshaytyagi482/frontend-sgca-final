@@ -899,13 +899,7 @@ const resolveImageUrl = (img?: string) => {
                       </tbody>
                     </table>
                   </div>
-                  {/* Debug: show current services payloads to help diagnose mismatches */}
-                  <div className="mt-4 p-3 bg-gray-50 rounded text-sm text-gray-700">
-                    <div className="mb-2 font-medium">Admin services preview (formData.siteData.services):</div>
-                    <pre className="max-h-40 overflow-auto text-xs bg-white p-2 rounded border">{JSON.stringify(formData?.siteData?.services, null, 2)}</pre>
-                    <div className="mt-2 mb-2 font-medium">Live data.services (from context):</div>
-                    <pre className="max-h-40 overflow-auto text-xs bg-white p-2 rounded border">{JSON.stringify(data?.siteData?.services, null, 2)}</pre>
-                  </div>
+                
                   <Card>
                     <Input
                       label="Label"
