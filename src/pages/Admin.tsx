@@ -530,7 +530,7 @@ const resolveImageUrl = (img?: string) => {
   if (loading) return <div className="p-10">Loading…</div>;
 
   return (
-  <div className="min-h-screen pt-16 md:pt-30 flex bg-gray-100">
+  <div className="min-h-screen flex bg-gray-100">
     {/* SIDEBAR INDICATOR BUTTON */}
     {isMobile && !sidebarOpen && (
       <button
@@ -776,6 +776,46 @@ const resolveImageUrl = (img?: string) => {
                       })
                     }
                   />
+                  <EditableTable
+                    columns={[
+                      { key: 'label', label: 'Label', type: 'input' },
+                      { key: 'href', label: 'Href', type: 'input' },
+                      { key: 'variant', label: 'Variant', type: 'input' },
+                    ]}
+                    data={formData.siteData.hero.cta || []}
+                    onChange={(index, key, value) => {
+                      const newCta = [...(formData.siteData.hero.cta || [])];
+                      newCta[index] = { ...newCta[index], [key]: value };
+                      setFormData({
+                        ...formData,
+                        siteData: {
+                          ...formData.siteData,
+                          hero: { ...formData.siteData.hero, cta: newCta },
+                        },
+                      });
+                    }}
+                    onAdd={() => {
+                      const newCta = [...(formData.siteData.hero.cta || []), { label: '', href: '', variant: '' }];
+                      setFormData({
+                        ...formData,
+                        siteData: {
+                          ...formData.siteData,
+                          hero: { ...formData.siteData.hero, cta: newCta },
+                        },
+                      });
+                    }}
+                    onDelete={(index) => {
+                      const newCta = (formData.siteData.hero.cta || []).filter((_: any, idx: number) => idx !== index);
+                      setFormData({
+                        ...formData,
+                        siteData: {
+                          ...formData.siteData,
+                          hero: { ...formData.siteData.hero, cta: newCta },
+                        },
+                      });
+                    }}
+                    addButtonText="Add CTA"
+                  />
                 </Section>
               )}
                  {activeSection === 'About' && (
@@ -821,7 +861,7 @@ const resolveImageUrl = (img?: string) => {
                         </tr>
                       </thead>
                       <tbody className="bg-white divide-y divide-gray-200">
-                        {(formData.aboutPageData?.stats || []).map((stat: any, index: number) => (
+                        {(formData.siteData?.about?.stats || []).map((stat: any, index: number) => (
                           <tr key={index}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{stat.label}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{stat.value}</td>
@@ -844,10 +884,10 @@ const resolveImageUrl = (img?: string) => {
                               </button>
                               <button
                                 onClick={() => {
-                                  const newStats = (formData.aboutPageData?.stats || []).filter((_: any, idx: number) => idx !== index);
-                                  const newForm = { ...formData, aboutPageData: { ...formData.aboutPageData, stats: newStats } };
+                                  const newStats = (formData.siteData?.about?.stats || []).filter((_: any, idx: number) => idx !== index);
+                                  const newForm = { ...formData, siteData: { ...formData.siteData, about: { ...formData.siteData.about, stats: newStats } } };
                                   setFormData(newForm);
-                                  console.log('About stats deleted — new aboutPageData.stats:', newStats);
+                                  console.log('Home about stats deleted — new siteData.about.stats:', newStats);
                                 }}
                                 className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
                               >
@@ -858,6 +898,13 @@ const resolveImageUrl = (img?: string) => {
                         ))}
                       </tbody>
                     </table>
+                  </div>
+                  {/* Debug: show current services payloads to help diagnose mismatches */}
+                  <div className="mt-4 p-3 bg-gray-50 rounded text-sm text-gray-700">
+                    <div className="mb-2 font-medium">Admin services preview (formData.siteData.services):</div>
+                    <pre className="max-h-40 overflow-auto text-xs bg-white p-2 rounded border">{JSON.stringify(formData?.siteData?.services, null, 2)}</pre>
+                    <div className="mt-2 mb-2 font-medium">Live data.services (from context):</div>
+                    <pre className="max-h-40 overflow-auto text-xs bg-white p-2 rounded border">{JSON.stringify(data?.siteData?.services, null, 2)}</pre>
                   </div>
                   <Card>
                     <Input
@@ -878,24 +925,22 @@ const resolveImageUrl = (img?: string) => {
                     <div className="flex gap-2">
                       {statsEditingIndex !== null ? (
                         <>
-                          <button
-                            onClick={() => {
-                              const newStats = [...formData.siteData.about.stats];
-                              newStats[statsEditingIndex] = statsForm;
-                              setFormData({
-                                ...formData,
-                                siteData: {
-                                  ...formData.siteData,
-                                  about: { ...formData.siteData.about, stats: newStats },
-                                },
-                              });
-                              setStatsEditingIndex(null);
-                              setStatsForm({ label: '', value: '', icon: '' });
-                            }}
-                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                          >
-                            Save Changes
-                          </button>
+                              <button
+                                onClick={() => {
+                                  const baseStats = Array.isArray(formData.siteData?.about?.stats) ? formData.siteData.about.stats : [];
+                                  const newStats = [...baseStats];
+                                  if (statsEditingIndex !== null) newStats[statsEditingIndex] = statsForm;
+                                  setFormData({
+                                    ...formData,
+                                    siteData: { ...formData.siteData, about: { ...formData.siteData.about, stats: newStats } },
+                                  });
+                                  setStatsEditingIndex(null);
+                                  setStatsForm({ label: '', value: '', icon: '' });
+                                }}
+                                className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+                              >
+                                Save Changes
+                              </button>
                           <button
                             onClick={() => {
                               setStatsEditingIndex(null);
@@ -909,13 +954,11 @@ const resolveImageUrl = (img?: string) => {
                       ) : (
                         <button
                           onClick={() => {
-                            const newStats = [...formData.siteData.about.stats, statsForm];
+                            const baseStats = Array.isArray(formData.siteData?.about?.stats) ? formData.siteData.about.stats : [];
+                            const newStats = [...baseStats, statsForm];
                             setFormData({
                               ...formData,
-                              siteData: {
-                                ...formData.siteData,
-                                about: { ...formData.siteData.about, stats: newStats },
-                              },
+                              siteData: { ...formData.siteData, about: { ...formData.siteData.about, stats: newStats } },
                             });
                             setStatsForm({ label: '', value: '', icon: '' });
                           }}
@@ -936,6 +979,7 @@ const resolveImageUrl = (img?: string) => {
                         <tr>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Icon</th>
                           <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                         </tr>
                       </thead>
@@ -1042,6 +1086,34 @@ const resolveImageUrl = (img?: string) => {
 
                  {activeSection === 'Services' && (
                 <Section title="Services">
+                  <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <Input
+                      label="Services Title"
+                      value={formData.siteData.services?.title || ''}
+                      onChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          siteData: {
+                            ...formData.siteData,
+                            services: { ...formData.siteData.services, title: value },
+                          },
+                        })
+                      }
+                    />
+                    <Textarea
+                      label="Services Subtitle"
+                      value={formData.siteData.services?.subtitle || ''}
+                      onChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          siteData: {
+                            ...formData.siteData,
+                            services: { ...formData.siteData.services, subtitle: value },
+                          },
+                        })
+                      }
+                    />
+                  </div>
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -1056,7 +1128,13 @@ const resolveImageUrl = (img?: string) => {
                           <tr key={index}>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{service.title}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{service.description}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{service.icon}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {service.icon && typeof service.icon === 'string' && service.icon.trim().startsWith('<svg') ? (
+                                <div className="w-8 h-8" dangerouslySetInnerHTML={{ __html: service.icon }} />
+                              ) : (
+                                <span className="text-sm text-gray-700">{String(service.icon || '—')}</span>
+                              )}
+                            </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                               <button
                                 onClick={() => {
@@ -1100,10 +1178,11 @@ const resolveImageUrl = (img?: string) => {
                       onChange={(value) => setServicesForm({ ...servicesForm, description: value })}
                     />
                     <Input
-                      label="Icon"
+                      label="Icon (paste SVG or lucide name)"
                       value={servicesForm.icon}
                       onChange={(value) => setServicesForm({ ...servicesForm, icon: value })}
                     />
+
                     <div className="flex gap-2">
                       {servicesEditingIndex !== null ? (
                         <>

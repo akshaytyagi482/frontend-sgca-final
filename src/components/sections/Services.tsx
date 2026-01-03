@@ -32,9 +32,12 @@ export default function Services() {
 
         <div className="mt-20 grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
           {servicesData.items.map((service: any, index: number) => {
-            const IconComponent = iconMap[service.icon as keyof typeof iconMap] || Code;
+            // If the stored icon is an inline SVG string, render that. Otherwise map known icon keys to lucide components.
+            const rawIcon = service.icon;
+            const isSvgString = typeof rawIcon === 'string' && rawIcon.trim().startsWith('<svg');
+            const IconProp = isSvgString ? rawIcon : (iconMap[rawIcon as keyof typeof iconMap] || Code);
             return (
-              <ServiceCard key={index} index={index} title={service.title} description={service.description} icon={IconComponent} />
+              <ServiceCard key={index} index={index} title={service.title} description={service.description} icon={IconProp} />
             );
           })}
         </div>

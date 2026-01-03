@@ -6,7 +6,8 @@ import { useInView } from 'react-intersection-observer';
 interface ServiceCardProps {
   title: string;
   description: string;
-  icon: LucideIcon;
+  // icon can be a lucide component or an inline SVG string
+  icon?: LucideIcon | string | null;
   index: number;
 }
 
@@ -28,7 +29,14 @@ export function ServiceCard({ title, description, icon: Icon, index }: ServiceCa
         whileHover={{ scale: 1.1 }}
         className="w-12 h-12 rounded-full bg-blue-100 flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors duration-300"
       >
-        <Icon className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
+        {typeof Icon === 'string' ? (
+          <div
+            className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors duration-300"
+            dangerouslySetInnerHTML={{ __html: Icon }}
+          />
+        ) : Icon ? (
+          <Icon className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
+        ) : null}
       </motion.div>
       <h3 className="text-xl font-bold text-gray-900 mb-2">{title}</h3>
       <p className="text-gray-500">{description}</p>
