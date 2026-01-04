@@ -261,6 +261,8 @@ const [activePage, setActivePage] = useState<
   const [isMobile, setIsMobile] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [touchStart, setTouchStart] = useState(0);
+const [fileInputKey, setFileInputKey] = useState(0);
+const [fileInputtKey, setFileInputtKey] = useState(0);
 
  const [selectedFileTeamForm, setSelectedFileTeamForm] = useState<File | null>(null);
   const [selectedFileLeadershipForm, setSelectedFileLeadershipForm] = useState<File | null>(null);
@@ -421,10 +423,16 @@ const [leadershipForm, setLeadershipForm] = useState({ name: '', role: '', image
   }
 };
 
-const uploadFile = async (file: File) => {
+const uploadFile = async (file: File | string): Promise<string> => {
+  if (typeof file === 'string') {
+    return file;
+  }
+
   const formDataUpload = new FormData();
   formDataUpload.append('image', file);
+
   const token = localStorage.getItem('adminToken');
+
   const res = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/upload`, {
     method: 'POST',
     headers: {
@@ -432,15 +440,14 @@ const uploadFile = async (file: File) => {
     },
     body: formDataUpload,
   });
-  if (res.ok) {
-    // Backend returns a success message rather than the filename.
-    // Use the original file name as the saved identifier so it can be referenced later.
-    // The client will store the filename; rendering will resolve it to a full URL.
-    await res.text();
-    return file.name;
-  } else {
+
+  if (!res.ok) {
     throw new Error('Upload failed');
   }
+
+  const data = await res.json();
+
+  return data.filename;
 };
 
 // Resolve stored image value (filename or full URL) to a full backend URL
@@ -1332,6 +1339,7 @@ const resolveImageUrl = (img?: string) => {
                         Image
                       </label>
                       <input
+                      key={fileInputKey}
                         type="file"
                         accept="image/*"
                         onChange={(e) => setSelectedFileTeamForm(e.target.files?.[0] || null)}
@@ -1387,6 +1395,7 @@ const resolveImageUrl = (img?: string) => {
                               });
                               setTeamEditingIndex(null);
                               setTeamForm({ name: '', role: '', image: '', bio: '', socials: { linkedin: '' } });
+                              setFileInputKey((k) => k + 1);
                             }}
                             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                           >
@@ -1397,6 +1406,7 @@ const resolveImageUrl = (img?: string) => {
                               setTeamEditingIndex(null);
                               setTeamForm({ name: '', role: '', image: '', bio: '', socials: { linkedin: '' } });
                               setSelectedFileTeamForm(null);
+                              setFileInputKey((k) => k + 1);
                             }}
                             className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
                           >
@@ -1420,6 +1430,7 @@ const resolveImageUrl = (img?: string) => {
                               },
                             });
                             setTeamForm({ name: '', role: '', image: '', bio: '', socials: { linkedin: '' } });
+                            setFileInputKey((k) => k + 1);
                           }}
                           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                         >
@@ -2388,7 +2399,27 @@ const resolveImageUrl = (img?: string) => {
                             </td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{(Array.isArray(p.technologies) ? p.technologies : Array.isArray(p.tech) ? p.tech : []).join(', ')}</td>
                             <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button onClick={() => { setPortfolioProjectsEditingIndex(index); setPortfolioProjectsForm({ ...p, technologies: Array.isArray(p.technologies) ? p.technologies : Array.isArray(p.tech) ? p.tech : [] }); }} className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2">Edit</button>
+                              <button
+  onClick={() => {
+    setPortfolioProjectsEditingIndex(index);
+
+    setPortfolioProjectsForm({
+      title: p.title ?? '',
+      description: p.description ?? '',
+      image: p.image ?? '',
+      externalLink: p.externalLink ?? '',
+      technologies: Array.isArray(p.technologies)
+        ? p.technologies
+        : Array.isArray(p.tech)
+        ? p.tech
+        : [],
+    });
+  }}
+  className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
+>
+  Edit
+</button>
+
                               <button onClick={() => { const newProjects = formData.portfolioPageData.projects.filter((_: any, idx: number) => idx !== index); setFormData({ ...formData, portfolioPageData: { ...formData.portfolioPageData, projects: newProjects } }); }} className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700">Delete</button>
                             </td>
                           </tr>
@@ -2401,7 +2432,7 @@ const resolveImageUrl = (img?: string) => {
                     <Textarea label="Description" value={portfolioProjectsForm.description} onChange={(value) => setPortfolioProjectsForm({ ...portfolioProjectsForm, description: value })} />
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">Image</label>
-                      <input type="file" accept="image/*" onChange={(e) => setSelectedFilePortfolioForm(e.target.files?.[0] || null)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
+                      <input key={fileInputtKey} type="file" accept="image/*" onChange={(e) => setSelectedFilePortfolioForm(e.target.files?.[0] || null)} className="w-full px-3 py-2 border border-gray-300 rounded-md" />
                       {selectedFilePortfolioForm && (
                         <div className="mt-2">
                           <img src={URL.createObjectURL(selectedFilePortfolioForm)} alt="Preview" className="w-16 h-16 rounded-full object-cover border border-gray-300" />
@@ -2436,8 +2467,9 @@ const resolveImageUrl = (img?: string) => {
                             setFormData({ ...formData, portfolioPageData: { ...formData.portfolioPageData, projects: newProjects } });
                             setPortfolioProjectsEditingIndex(null);
                             setPortfolioProjectsForm({ title: '', description: '', image: '', technologies: [], externalLink: '' });
+                             setFileInputtKey((k) => k + 1);
                           }} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Save Changes</button>
-                          <button onClick={() => { setPortfolioProjectsEditingIndex(null); setPortfolioProjectsForm({ title: '', description: '', image: '', technologies: [], externalLink: '' }); setSelectedFilePortfolioForm(null); }} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</button>
+                          <button onClick={() => { setPortfolioProjectsEditingIndex(null); setFileInputtKey((k) => k + 1); setPortfolioProjectsForm({ title: '', description: '', image: '', technologies: [], externalLink: '' }); setSelectedFilePortfolioForm(null); }} className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700">Cancel</button>
                         </>
                       ) : (
                         <button onClick={async () => {
@@ -2456,6 +2488,7 @@ const resolveImageUrl = (img?: string) => {
                           const newProjects = [...formData.portfolioPageData.projects, toSave];
                           setFormData({ ...formData, portfolioPageData: { ...formData.portfolioPageData, projects: newProjects } });
                           setPortfolioProjectsForm({ title: '', description: '', image: '', technologies: [], externalLink: '' });
+                           setFileInputtKey((k) => k + 1);
                         }} className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700">Add Project</button>
                       )}
                     </div>
@@ -3064,335 +3097,478 @@ const resolveImageUrl = (img?: string) => {
             )}
 
             {/* CONTACT */}
-            {activePage === 'contact' && formData && (
-              <>
-              {activeSection === 'Hero' && (
-                <Section title="Hero">
-                  <Input
-                    label="Title"
-                    value={formData.contactPageData.hero.title}
-                    onChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        contactPageData: {
-                          ...formData.contactPageData,
-                          hero: { ...formData.contactPageData.hero, title: value },
-                        },
-                      })
-                    }
-                  />
-                  <Textarea
-                    label="Subtitle"
-                    value={formData.contactPageData.hero.subtitle}
-                    onChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        contactPageData: {
-                          ...formData.contactPageData,
-                          hero: { ...formData.contactPageData.hero, subtitle: value },
-                        },
-                      })
-                    }
-                  />
-                </Section>
-              )}
-              {activeSection === 'Contact Info' && (
-                <Section title="Contact Info">
-                  {formData.contactPageData.contactInfo.map((c: any, i: number) => (
-                    <Card key={i}>
-                      <Input
-                        label="Type"
-                        value={c.type}
-                        onChange={(value) => {
-                          const newContactInfo = [...formData.contactPageData.contactInfo];
-                          newContactInfo[i].type = value;
-                          setFormData({
-                            ...formData,
-                            contactPageData: { ...formData.contactPageData, contactInfo: newContactInfo },
-                          });
-                        }}
+            {activeSection === 'Contact Info' && (
+  <Section title="Contact Info">
+    {formData.contactPageData.contactInfo.map((c: any, i: number) => (
+      <Card key={i}>
+
+        {/* TYPE SELECTOR */}
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Type
+          </label>
+          <select
+            value={c.type}
+            onChange={(e) => {
+              const type = e.target.value;
+
+              const newContactInfo = [...formData.contactPageData.contactInfo];
+
+              newContactInfo[i] = {
+                ...newContactInfo[i],
+                type,
+                icon:
+                  type === 'email'
+                    ? 'mail'
+                    : type === 'phone'
+                    ? 'phone'
+                    : 'map-pin',
+                value:
+                  type === 'address'
+                    ? { line1: '', line2: '' }
+                    : '',
+              };
+
+              setFormData({
+                ...formData,
+                contactPageData: {
+                  ...formData.contactPageData,
+                  contactInfo: newContactInfo,
+                },
+              });
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md"
+          >
+            <option value="">Select type</option>
+            <option value="email">Email</option>
+            <option value="phone">Phone</option>
+            <option value="address">Address</option>
+          </select>
+        </div>
+
+        {/* TITLE */}
+        <Input
+          label="Title"
+          value={c.title || ''}
+          onChange={(value) => {
+            const newContactInfo = [...formData.contactPageData.contactInfo];
+            newContactInfo[i].title = value;
+
+            setFormData({
+              ...formData,
+              contactPageData: {
+                ...formData.contactPageData,
+                contactInfo: newContactInfo,
+              },
+            });
+          }}
+        />
+
+        {/* ICON */}
+        <Input
+          label="Icon (mail / phone / map-pin)"
+          value={c.icon || ''}
+          onChange={(value) => {
+            const newContactInfo = [...formData.contactPageData.contactInfo];
+            newContactInfo[i].icon = value;
+
+            setFormData({
+              ...formData,
+              contactPageData: {
+                ...formData.contactPageData,
+                contactInfo: newContactInfo,
+              },
+            });
+          }}
+        />
+
+        {/* VALUE */}
+        {c.type === 'address' ? (
+          <>
+            <Input
+              label="Address Line 1"
+              value={c.value?.line1 || ''}
+              onChange={(value) => {
+                const newContactInfo = [...formData.contactPageData.contactInfo];
+                newContactInfo[i].value = {
+                  ...newContactInfo[i].value,
+                  line1: value,
+                };
+
+                setFormData({
+                  ...formData,
+                  contactPageData: {
+                    ...formData.contactPageData,
+                    contactInfo: newContactInfo,
+                  },
+                });
+              }}
+            />
+            <Input
+              label="Address Line 2"
+              value={c.value?.line2 || ''}
+              onChange={(value) => {
+                const newContactInfo = [...formData.contactPageData.contactInfo];
+                newContactInfo[i].value = {
+                  ...newContactInfo[i].value,
+                  line2: value,
+                };
+
+                setFormData({
+                  ...formData,
+                  contactPageData: {
+                    ...formData.contactPageData,
+                    contactInfo: newContactInfo,
+                  },
+                });
+              }}
+            />
+          </>
+        ) : (
+          <Input
+            label="Value"
+            value={typeof c.value === 'string' ? c.value : ''}
+            onChange={(value) => {
+              const newContactInfo = [...formData.contactPageData.contactInfo];
+              newContactInfo[i].value = value;
+
+              setFormData({
+                ...formData,
+                contactPageData: {
+                  ...formData.contactPageData,
+                  contactInfo: newContactInfo,
+                },
+              });
+            }}
+          />
+        )}
+
+        {/* DELETE */}
+        <button
+          onClick={() => {
+            const newContactInfo =
+              formData.contactPageData.contactInfo.filter(
+                (_: any, idx: number) => idx !== i
+              );
+
+            setFormData({
+              ...formData,
+              contactPageData: {
+                ...formData.contactPageData,
+                contactInfo: newContactInfo,
+              },
+            });
+          }}
+          className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+        >
+          Delete
+        </button>
+      </Card>
+    ))}
+
+    {/* ADD */}
+    <button
+      onClick={() => {
+        const newContactInfo = [
+          ...formData.contactPageData.contactInfo,
+          {
+            type: '',
+            title: '',
+            icon: '',
+            value: '',
+          },
+        ];
+
+        setFormData({
+          ...formData,
+          contactPageData: {
+            ...formData.contactPageData,
+            contactInfo: newContactInfo,
+          },
+        });
+      }}
+      className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
+    >
+      Add Contact Info
+    </button>
+  </Section>
+)}
+
+
+              {activePage === 'leadership' && formData && (
+  <>
+    {/* ================= HERO ================= */}
+    {activeSection === 'Hero' && (
+      <Section title="Hero">
+        <Input
+          label="Title"
+          value={formData.leadershipPageData.hero.title}
+          onChange={(value) =>
+            setFormData({
+              ...formData,
+              leadershipPageData: {
+                ...formData.leadershipPageData,
+                hero: {
+                  ...formData.leadershipPageData.hero,
+                  title: value,
+                },
+              },
+            })
+          }
+        />
+        <Textarea
+          label="Subtitle"
+          value={formData.leadershipPageData.hero.subtitle}
+          onChange={(value) =>
+            setFormData({
+              ...formData,
+              leadershipPageData: {
+                ...formData.leadershipPageData,
+                hero: {
+                  ...formData.leadershipPageData.hero,
+                  subtitle: value,
+                },
+              },
+            })
+          }
+        />
+      </Section>
+    )}
+
+    {/* ================= LEADERSHIP TEAM ================= */}
+    {activeSection === 'Leadership Team' && (
+      <Section title="Leadership Team">
+
+        {/* TABLE */}
+        <div className="overflow-x-auto">
+          <table className="min-w-full divide-y divide-gray-200">
+            <thead className="bg-gray-50">
+              <tr>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Role</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Image</th>
+                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="bg-white divide-y divide-gray-200">
+              {formData.leadershipPageData.members.map((member: any, index: number) => (
+                <tr key={index}>
+                  <td className="px-6 py-4">{member.name}</td>
+                  <td className="px-6 py-4">{member.role}</td>
+                  <td className="px-6 py-4">
+                    {member.image && (
+                      <img
+                        src={resolveImageUrl(member.image)}
+                        className="w-12 h-12 rounded-full object-cover"
                       />
-                      {typeof c.value === 'string' ? (
-                        <Input
-                          label="Value"
-                          value={c.value}
-                          onChange={(value) => {
-                            const newContactInfo = [...formData.contactPageData.contactInfo];
-                            newContactInfo[i].value = value;
-                            setFormData({
-                              ...formData,
-                              contactPageData: { ...formData.contactPageData, contactInfo: newContactInfo },
-                            });
-                          }}
-                        />
-                      ) : (
-                        <>
-                          <Input
-                            label="Line 1"
-                            value={c.value.line1}
-                            onChange={(value) => {
-                              const newContactInfo = [...formData.contactPageData.contactInfo];
-                              newContactInfo[i].value = { ...newContactInfo[i].value, line1: value };
-                              setFormData({
-                                ...formData,
-                                contactPageData: { ...formData.contactPageData, contactInfo: newContactInfo },
-                              });
-                            }}
-                          />
-                          <Input
-                            label="Line 2"
-                            value={c.value.line2}
-                            onChange={(value) => {
-                              const newContactInfo = [...formData.contactPageData.contactInfo];
-                              newContactInfo[i].value = { ...newContactInfo[i].value, line2: value };
-                              setFormData({
-                                ...formData,
-                                contactPageData: { ...formData.contactPageData, contactInfo: newContactInfo },
-                              });
-                            }}
-                          />
-                        </>
-                      )}
-                      <button
-                        onClick={() => {
-                          const newContactInfo = formData.contactPageData.contactInfo.filter((_: any, idx: number) => idx !== i);
-                          setFormData({
-                            ...formData,
-                            contactPageData: { ...formData.contactPageData, contactInfo: newContactInfo },
-                          });
-                        }}
-                        className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-                      >
-                        Delete
-                      </button>
-                    </Card>
-                  ))}
-                  <button
-                    onClick={() => {
-                      const newContactInfo = [...formData.contactPageData.contactInfo, { type: '', value: '' }];
-                      setFormData({
-                        ...formData,
-                        contactPageData: { ...formData.contactPageData, contactInfo: newContactInfo },
-                      });
-                    }}
-                    className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                  >
-                    Add Contact Info
-                  </button>
-                </Section>
-              )}
-              </>
+                    )}
+                  </td>
+                  <td className="px-6 py-4 space-x-2">
+                    <button
+                      className="px-3 py-1 bg-blue-600 text-white rounded"
+                      onClick={() => {
+                        setLeadershipEditingIndex(index);
+                        setLeadershipForm({
+                          name: member.name || '',
+                          role: member.role || '',
+                          image: member.image || '',
+                          bio: member.bio || '',
+                          socials: { ...member.socials },
+                        });
+                      }}
+                    >
+                      Edit
+                    </button>
+
+                    <button
+                      className="px-3 py-1 bg-red-600 text-white rounded"
+                      onClick={() => {
+                        setFormData({
+                          ...formData,
+                          leadershipPageData: {
+                            ...formData.leadershipPageData,
+                            members: formData.leadershipPageData.members.filter(
+                              (_: any, i: number) => i !== index
+                            ),
+                          },
+                        });
+                      }}
+                    >
+                      Delete
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {/* FORM */}
+        <Card>
+          <Input
+            label="Name"
+            value={leadershipForm.name}
+            onChange={(v) => setLeadershipForm({ ...leadershipForm, name: v })}
+          />
+          <Input
+            label="Role"
+            value={leadershipForm.role}
+            onChange={(v) => setLeadershipForm({ ...leadershipForm, role: v })}
+          />
+
+          {/* IMAGE */}
+          <div>
+            <label className="block text-sm font-medium mb-1">Image</label>
+            <input
+  key={fileInputKey}
+  type="file"
+  accept="image/*"
+  onChange={(e) =>
+    setSelectedFileLeadershipForm(e.target.files?.[0] || null)
+  }
+  className="w-full border px-3 py-2 rounded"
+/>
+
+            {selectedFileLeadershipForm && (
+              <img
+                src={URL.createObjectURL(selectedFileLeadershipForm)}
+                className="w-16 h-16 rounded-full mt-2"
+              />
             )}
 
-            {/* LEADERSHIP */}
-            {activePage === 'leadership' && formData && (
+            {!selectedFileLeadershipForm && leadershipForm.image && (
+              <img
+                src={resolveImageUrl(leadershipForm.image)}
+                className="w-16 h-16 rounded-full mt-2"
+              />
+            )}
+          </div>
+
+          <Textarea
+            label="Bio"
+            value={leadershipForm.bio}
+            onChange={(v) => setLeadershipForm({ ...leadershipForm, bio: v })}
+          />
+
+          <Input
+            label="LinkedIn"
+            value={leadershipForm.socials.linkedin}
+            onChange={(v) =>
+              setLeadershipForm({
+                ...leadershipForm,
+                socials: { linkedin: v },
+              })
+            }
+          />
+
+          {/* ACTION BUTTONS */}
+          <div className="flex gap-2">
+            {leadershipEditingIndex !== null ? (
               <>
-              {activeSection === 'Hero' && (
-                <Section title="Hero">
-                  <Input
-                    label="Title"
-                    value={formData.leadershipPageData.hero.title}
-                    onChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        leadershipPageData: {
-                          ...formData.leadershipPageData,
-                          hero: { ...formData.leadershipPageData.hero, title: value },
-                        },
-                      })
+                {/* UPDATE */}
+                <button
+                  className="px-4 py-2 bg-green-600 text-white rounded"
+                  onClick={async () => {
+                    let image = leadershipForm.image;
+
+                    if (selectedFileLeadershipForm) {
+                      image = await uploadFile(selectedFileLeadershipForm);
                     }
-                  />
-                  <Textarea
-                    label="Subtitle"
-                    value={formData.leadershipPageData.hero.subtitle}
-                    onChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        leadershipPageData: {
-                          ...formData.leadershipPageData,
-                          hero: { ...formData.leadershipPageData.hero, subtitle: value },
-                        },
-                      })
-                    }
-                  />
-                </Section>
-              )}
-              {activeSection === 'Leadership Team' && (
-                <Section title="Leadership Team">
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Role</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {formData.leadershipPageData.members.map((member: any, index: number) => (
-                          <tr key={index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{member.name}</td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{member.role}</td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              {member.image && (
-                                <img
-                                  src={resolveImageUrl(member.image)}
-                                  alt="Preview"
-                                  className="w-16 h-16 rounded-full object-cover border border-gray-300"
-                                />
-                              )}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <button
-                                onClick={() => {
-                                  setLeadershipEditingIndex(index);
-                                  setLeadershipForm(member);
-                                }}
-                                className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 mr-2"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                onClick={() => {
-                                  const newMembers = formData.leadershipPageData.members.filter((_: any, idx: number) => idx !== index);
-                                  setFormData({
-                                    ...formData,
-                                    leadershipPageData: { ...formData.leadershipPageData, members: newMembers },
-                                  });
-                                }}
-                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                              >
-                                Delete
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                  <Card>
-                    <Input
-                      label="Name"
-                      value={leadershipForm.name}
-                      onChange={(value) => setLeadershipForm({ ...leadershipForm, name: value })}
-                    />
-                    <Input
-                      label="Role"
-                      value={leadershipForm.role}
-                      onChange={(value) => setLeadershipForm({ ...leadershipForm, role: value })}
-                    />
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Image
-                      </label>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => setSelectedFileLeadershipForm(e.target.files?.[0] || null)}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-md"
-                      />
-                      {selectedFileLeadershipForm && (
-                        <div className="mt-2">
-                          <img
-                            src={URL.createObjectURL(selectedFileLeadershipForm)}
-                            alt="Preview"
-                            className="w-16 h-16 rounded-full object-cover border border-gray-300"
-                          />
-                        </div>
-                      )}
-                      {leadershipForm.image && !selectedFileLeadershipForm && (
-                        <div className="mt-2">
-                          <img
-                            src={resolveImageUrl(leadershipForm.image)}
-                            alt="Current"
-                            className="w-16 h-16 rounded-full object-cover border border-gray-300"
-                          />
-                        </div>
-                      )}
-                    </div>
-                    <Textarea
-                      label="Bio"
-                      value={leadershipForm.bio}
-                      onChange={(value) => setLeadershipForm({ ...leadershipForm, bio: value })}
-                    />
-                    <Input
-                      label="LinkedIn"
-                      value={leadershipForm.socials.linkedin}
-                      onChange={(value) => setLeadershipForm({ ...leadershipForm, socials: { ...leadershipForm.socials, linkedin: value } })}
-                    />
-                    <div className="flex gap-2">
-                      {leadershipEditingIndex !== null ? (
-                        <>
-                          <button
-                            onClick={async () => {
-                              const updated = { ...leadershipForm } as any;
-                              if (selectedFileLeadershipForm) {
-                                try {
-                                  const filename = await uploadFile(selectedFileLeadershipForm);
-                                  updated.image = filename;
-                                } catch (err) {
-                                  alert('Image upload failed');
-                                  return;
-                                }
-                                setSelectedFileLeadershipForm(null);
-                              }
-                              const newMembers = [...formData.leadershipPageData.members];
-                              newMembers[leadershipEditingIndex] = updated;
-                              setFormData({
-                                ...formData,
-                                leadershipPageData: { ...formData.leadershipPageData, members: newMembers },
-                              });
-                              setLeadershipEditingIndex(null);
-                              setLeadershipForm({ name: '', role: '', image: '', bio: '', socials: { linkedin: '' } });
-                            }}
-                            className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                          >
-                            Update Member
-                          </button>
-                          <button
-                            onClick={() => {
-                              setLeadershipEditingIndex(null);
-                              setLeadershipForm({ name: '', role: '', image: '', bio: '', socials: { linkedin: '' } });
-                              setSelectedFileLeadershipForm(null);
-                            }}
-                            className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
-                          >
-                            Cancel
-                          </button>
-                        </>
-                      ) : (
-                        <button
-                          onClick={async () => {
-                            const toAdd = { ...leadershipForm } as any;
-                            if (selectedFileLeadershipForm) {
-                              try {
-                                const filename = await uploadFile(selectedFileLeadershipForm);
-                                toAdd.image = filename;
-                              } catch (err) {
-                                alert('Image upload failed');
-                                return;
-                              }
-                              setSelectedFileLeadershipForm(null);
-                            }
-                            const newMembers = [...formData.leadershipPageData.members, toAdd];
-                            setFormData({
-                              ...formData,
-                              leadershipPageData: { ...formData.leadershipPageData, members: newMembers },
-                            });
-                            setLeadershipForm({ name: '', role: '', image: '', bio: '', socials: { linkedin: '' } });
-                          }}
-                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
-                        >
-                          Add Member
-                        </button>
-                      )}
-                    </div>
-                  </Card>
-                </Section>
-              )}
-            </>
-          )}
+
+                    const updated = {
+                      ...leadershipForm,
+                      image,
+                    };
+
+                    const members = [...formData.leadershipPageData.members];
+                    members[leadershipEditingIndex] = updated;
+
+                    setFormData({
+                      ...formData,
+                      leadershipPageData: {
+                        ...formData.leadershipPageData,
+                        members,
+                      },
+                    });
+
+                    // RESET
+                    setLeadershipEditingIndex(null);
+                    setLeadershipForm({
+                      name: '',
+                      role: '',
+                      image: '',
+                      bio: '',
+                      socials: { linkedin: '' },
+                    });
+                    setSelectedFileLeadershipForm(null);
+                    setFileInputKey((k) => k + 1);
+                  }}
+                >
+                  Update Member
+                </button>
+
+                {/* CANCEL */}
+                <button
+                  className="px-4 py-2 bg-gray-600 text-white rounded"
+                  onClick={() => {
+                    setLeadershipEditingIndex(null);
+                    setLeadershipForm({
+                      name: '',
+                      role: '',
+                      image: '',
+                      bio: '',
+                      socials: { linkedin: '' },
+                    });
+                    setSelectedFileLeadershipForm(null);
+                    setFileInputKey((k) => k + 1);
+                  }}
+                >
+                  Cancel
+                </button>
+              </>
+            ) : (
+              /* ADD */
+              <button
+                className="px-4 py-2 bg-green-600 text-white rounded"
+                onClick={async () => {
+                  let image = '';
+
+                  if (selectedFileLeadershipForm) {
+                    image = await uploadFile(selectedFileLeadershipForm);
+                  }
+
+                  setFormData({
+                    ...formData,
+                    leadershipPageData: {
+                      ...formData.leadershipPageData,
+                      members: [
+                        ...formData.leadershipPageData.members,
+                        { ...leadershipForm, image },
+                      ],
+                    },
+                  });
+
+                  // RESET
+                  setLeadershipForm({
+                    name: '',
+                    role: '',
+                    image: '',
+                    bio: '',
+                    socials: { linkedin: '' },
+                  });
+                  setSelectedFileLeadershipForm(null);
+                  setFileInputKey((k) => k + 1);
+                }}
+              >
+                Add Member
+              </button>
+            )}
+          </div>
+        </Card>
+      </Section>
+    )}
+  </>
+)}
           {activePage === 'footer' && formData && (
   <Section title="Footer">
 
