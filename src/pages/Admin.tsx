@@ -3749,6 +3749,121 @@ const resolveImageUrl = (img?: string) => {
 
   addButtonText="Add Contact Item"
 />
+{/* COPYRIGHT */}
+<Card>
+  <h3 className="text-lg font-semibold">Copyright</h3>
+
+  <Input
+    label="Company"
+    value={formData.footer.copyright.company}
+    onChange={(value) =>
+      setFormData((prev: any) => ({
+        ...prev,
+        footer: {
+          ...prev.footer,
+          copyright: {
+            ...prev.footer.copyright,
+            company: value,
+          },
+        },
+      }))
+    }
+  />
+
+  <Input
+    label="Text"
+    value={formData.footer.copyright.text}
+    onChange={(value) =>
+      setFormData((prev: any) => ({
+        ...prev,
+        footer: {
+          ...prev.footer,
+          copyright: {
+            ...prev.footer.copyright,
+            text: value,
+          },
+        },
+      }))
+    }
+  />
+
+  {/* SHOW YEAR */}
+  <div className="flex items-center gap-2">
+    <input
+      type="checkbox"
+      checked={formData.footer.copyright.showYear}
+      onChange={(e) =>
+        setFormData((prev: any) => ({
+          ...prev,
+          footer: {
+            ...prev.footer,
+            copyright: {
+              ...prev.footer.copyright,
+              showYear: e.target.checked,
+            },
+          },
+        }))
+      }
+    />
+    <label className="text-sm text-gray-700">Show Year</label>
+  </div>
+</Card>
+
+{/* CREDIT */}
+<Card>
+  <h3 className="text-lg font-semibold">Credit</h3>
+
+  <Input
+    label="Text"
+    value={formData.footer.credit.text}
+    onChange={(value) =>
+      setFormData((prev: any) => ({
+        ...prev,
+        footer: {
+          ...prev.footer,
+          credit: {
+            ...prev.footer.credit,
+            text: value,
+          },
+        },
+      }))
+    }
+  />
+
+  <Input
+    label="Icon (e.g. heart)"
+    value={formData.footer.credit.icon}
+    onChange={(value) =>
+      setFormData((prev: any) => ({
+        ...prev,
+        footer: {
+          ...prev.footer,
+          credit: {
+            ...prev.footer.credit,
+            icon: value,
+          },
+        },
+      }))
+    }
+  />
+
+  <Input
+    label="By"
+    value={formData.footer.credit.by}
+    onChange={(value) =>
+      setFormData((prev: any) => ({
+        ...prev,
+        footer: {
+          ...prev.footer,
+          credit: {
+            ...prev.footer.credit,
+            by: value,
+          },
+        },
+      }))
+    }
+  />
+</Card>
 
 
   </Section>
