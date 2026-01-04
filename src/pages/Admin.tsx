@@ -1748,6 +1748,7 @@ const resolveImageUrl = (img?: string) => {
                         Image
                       </label>
                       <input
+                      key={fileInputKey}
                         type="file"
                         accept="image/*"
                         onChange={(e) => setSelectedFilePortfolioForm(e.target.files?.[0] || null)}
@@ -1811,6 +1812,7 @@ const resolveImageUrl = (img?: string) => {
                               });
                               setPortfolioProjectsEditingIndex(null);
                               setPortfolioProjectsForm({ title: '', description: '', image: '', technologies: [], externalLink: '' });
+                               setFileInputKey((k) => k + 1);
                             }}
                             className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                           >
@@ -1820,6 +1822,7 @@ const resolveImageUrl = (img?: string) => {
                             onClick={() => {
                               setPortfolioProjectsEditingIndex(null);
                               setPortfolioProjectsForm({ title: '', description: '', image: '', technologies: [], externalLink: '' });
+                               setFileInputKey((k) => k + 1);
                             }}
                             className="px-4 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700"
                           >
@@ -1856,6 +1859,7 @@ const resolveImageUrl = (img?: string) => {
                               },
                             });
                             setPortfolioProjectsForm({ title: '', description: '', image: '', technologies: [], externalLink: '' });
+                             setFileInputKey((k) => k + 1);
                           }}
                           className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700"
                         >
