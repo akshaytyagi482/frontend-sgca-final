@@ -3101,6 +3101,7 @@ const resolveImageUrl = (img?: string) => {
             )}
 
             {/* CONTACT */}
+            {activePage === 'contact' && formData && ( <> {activeSection === 'Hero' && ( <Section title="Hero"> <Input label="Title" value={formData.contactPageData.hero.title} onChange={(value) => setFormData({ ...formData, contactPageData: { ...formData.contactPageData, hero: { ...formData.contactPageData.hero, title: value }, }, }) } /> <Textarea label="Subtitle" value={formData.contactPageData.hero.subtitle} onChange={(value) => setFormData({ ...formData, contactPageData: { ...formData.contactPageData, hero: { ...formData.contactPageData.hero, subtitle: value }, }, }) } /> </Section> )}
             {activeSection === 'Contact Info' && (
   <Section title="Contact Info">
     {formData.contactPageData.contactInfo.map((c: any, i: number) => (
@@ -3296,6 +3297,8 @@ const resolveImageUrl = (img?: string) => {
       Add Contact Info
     </button>
   </Section>
+)}
+</>
 )}
 
 
