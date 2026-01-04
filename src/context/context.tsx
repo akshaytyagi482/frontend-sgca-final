@@ -50,6 +50,18 @@ export const DataProvider = ({ children }: { children: React.ReactNode }) => {
     const originalFetch = globalAny.fetch.bind(window);
 
     const wrappedFetch = (...args: any[]) => {
+      // Do not count image fetching endpoints in the global activeRequests
+      try {
+        const req = args[0];
+        const url = typeof req === 'string' ? req : (req && req.url) || '';
+        const isImageEndpoint = /\/api\/images/i.test(url) || /\.(png|jpe?g|gif|svg)(\?|$)/i.test(url);
+        if (isImageEndpoint) {
+          return originalFetch(...args);
+        }
+      } catch {
+        // fall back to counting on error
+      }
+
       setActiveRequests((n) => n + 1);
       const result = originalFetch(...args);
       // Ensure we decrement when the promise settles

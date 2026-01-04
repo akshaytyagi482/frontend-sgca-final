@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
 import { ExternalLink } from 'lucide-react';
@@ -67,8 +67,8 @@ export default function Portfolio() {
     threshold: 0.1
   });
 
-  // Cache to avoid refetching blobs and creating duplicate object URLs
-  const imageCache: Map<string, string> = new Map();
+  // Persistent cache to avoid refetching blobs and creating duplicate object URLs
+  const imageCacheRef = useRef<Map<string, string | null>>(new Map());
 
   function isExternalUrl(src?: string) {
     if (!src) return false;
@@ -96,8 +96,10 @@ export default function Portfolio() {
       }
 
       const url = buildBackendUrl(src);
-      if (imageCache.has(url)) {
-        setImageSrc(imageCache.get(url));
+      if (imageCacheRef.current.has(url)) {
+        const cached = imageCacheRef.current.get(url);
+        if (cached) setImageSrc(cached);
+        else setImageSrc(src);
         return;
       }
 
@@ -112,12 +114,15 @@ export default function Portfolio() {
         .then((blob) => {
           if (cancelled) return;
           const obj = URL.createObjectURL(blob);
-          imageCache.set(url, obj);
+          imageCacheRef.current.set(url, obj);
           setImageSrc(obj);
         })
         .catch(() => {
-          // fallback to original src if fetch fails
-          if (!cancelled) setImageSrc(src);
+          // record failure to avoid retry loops and fallback to original src
+          if (!cancelled) {
+            imageCacheRef.current.set(url, null);
+            setImageSrc(src);
+          }
         });
 
       return () => {

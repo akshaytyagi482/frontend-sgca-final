@@ -113,6 +113,7 @@ function Textarea({
     { key: 'Hero', label: 'Hero' },
     { key: 'Leadership Team', label: 'Leadership Team' },
   ],
+  footer: []
 } as const;
 
 function EditableTable({
@@ -253,7 +254,7 @@ export default function AdminPage() {
   const [formData, setFormData] = useState<any>(null);
   const [activeSection, setActiveSection] = useState<string | null>(null);
 const [activePage, setActivePage] = useState<
-  'dashboard' | 'home' | 'about' | 'contact' | 'careers' | 'portfolio' | 'leadership'
+  'dashboard' | 'home' | 'about' | 'contact' | 'careers' | 'portfolio' | 'leadership' | 'footer'
 >('dashboard');
 
 
@@ -568,7 +569,8 @@ const resolveImageUrl = (img?: string) => {
         'portfolio',
         'careers',
         'contact',
-        'leadership'
+        'leadership',
+        'footer'
       ].map((page) => (
         <div key={page}>
           {/* PAGE BUTTON */}
@@ -625,7 +627,8 @@ const resolveImageUrl = (img?: string) => {
       'portfolio',
       'careers',
       'contact',
-      'leadership'
+      'leadership',
+      'footer'
     ].map((page) => (
       <div key={page}>
         {/* PAGE BUTTON */}
@@ -3216,26 +3219,6 @@ const resolveImageUrl = (img?: string) => {
               )}
               {activeSection === 'Leadership Team' && (
                 <Section title="Leadership Team">
-                  <Input
-                    label="Title"
-                    value={formData.leadershipPageData.title || ''}
-                    onChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        leadershipPageData: { ...formData.leadershipPageData, title: value },
-                      })
-                    }
-                  />
-                  <Textarea
-                    label="Subtitle"
-                    value={formData.leadershipPageData.subtitle || ''}
-                    onChange={(value) =>
-                      setFormData({
-                        ...formData,
-                        leadershipPageData: { ...formData.leadershipPageData, subtitle: value },
-                      })
-                    }
-                  />
                   <div className="overflow-x-auto">
                     <table className="min-w-full divide-y divide-gray-200">
                       <thead className="bg-gray-50">
@@ -3410,10 +3393,187 @@ const resolveImageUrl = (img?: string) => {
               )}
             </>
           )}
-          </div>
+          {activePage === 'footer' && formData && (
+  <Section title="Footer">
 
+    {/* ABOUT */}
+    <Card>
+      <Input
+        label="About Title"
+        value={formData.footer.about.title}
+        onChange={(value) =>
+          setFormData((prev: any) => ({
+  ...prev,
+  footer: {
+    ...prev.footer,
+    about: {
+      ...prev.footer.about,
+      title: value,
+    },
+  },
+}))
+
+        }
+      />
+      <Textarea
+        label="About Description"
+        value={formData.footer.about.description}
+        onChange={(value) =>
+         setFormData((prev: any) => ({
+  ...prev,
+  footer: {
+    ...prev.footer,
+    about: {
+      ...prev.footer.about,
+      description: value,
+    },
+  },
+}))
+
+        }
+      />
+    </Card>
+
+    {/* QUICK LINKS */}
+    <Card>
+      <Input
+        label="Quick Links Title"
+        value={formData.footer.quickLinks.title}
+        onChange={(value) =>
+         setFormData((prev: any) => ({
+  ...prev,
+  footer: {
+    ...prev.footer,
+    quickLinks: {
+      ...prev.footer.quickLinks,
+      title: value,
+    },
+  },
+}))
+
+        }
+      />
+
+      <EditableTable
+        columns={[
+          { key: 'label', label: 'Label', type: 'input' },
+          { key: 'href', label: 'Href', type: 'input' },
+        ]}
+        data={formData.footer.quickLinks.links}
+        onChange={(index, key, value) => {
+  setFormData((prev: any) => {
+    const links = [...prev.footer.quickLinks.links];
+    links[index] = { ...links[index], [key]: value };
+
+    return {
+      ...prev,
+      footer: {
+        ...prev.footer,
+        quickLinks: {
+          ...prev.footer.quickLinks,
+          links,
+        },
+      },
+    };
+  });
+ }}
+       onAdd={() => {
+  setFormData((prev: any) => ({
+    ...prev,
+    footer: {
+      ...prev.footer,
+      quickLinks: {
+        ...prev.footer.quickLinks,
+        links: [
+          ...prev.footer.quickLinks.links,
+          { label: '', href: '' },
+        ],
+      },
+    },
+  }));
+}}
+
+        onDelete={(index) => {
+          const links = formData.footer.quickLinks.links.filter(
+            (_: any, i: number) => i !== index
+          );
+          setFormData((prev: any) => ({
+  ...prev,
+  footer: {
+    ...prev.footer,
+    quickLinks: {
+      ...prev.footer.quickLinks,
+      links,
+    },
+  },
+}));
+
+        }}
+        addButtonText="Add Link"
+      />
+    </Card>
+
+    {/* CONTACT */}
+   <EditableTable
+  columns={[
+    { key: 'value', label: 'Contact Item', type: 'input' },
+  ]}
+  data={formData.footer.contact.items.map((v: string) => ({ value: v }))}
+
+  onChange={(index, _, value) => {
+    setFormData((prev: any) => {
+      const items = [...prev.footer.contact.items];
+      items[index] = value;
+
+      return {
+        ...prev,
+        footer: {
+          ...prev.footer,
+          contact: {
+            ...prev.footer.contact,
+            items,
+          },
+        },
+      };
+    });
+  }}
+
+  onAdd={() => {
+    setFormData((prev: any) => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        contact: {
+          ...prev.footer.contact,
+          items: [...prev.footer.contact.items, ''],
+        },
+      },
+    }));
+  }}
+
+  onDelete={(index) => {
+    setFormData((prev: any) => ({
+      ...prev,
+      footer: {
+        ...prev.footer,
+        contact: {
+          ...prev.footer.contact,
+          items: prev.footer.contact.items.filter((_: any, i: number) => i !== index),
+        },
+      },
+    }));
+  }}
+
+  addButtonText="Add Contact Item"
+/>
+
+
+  </Section>
+)}
+          </div>
           </div>
         )}
+       
       </main>
 
       {/* SAVE BUTTON */}

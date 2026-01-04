@@ -45,7 +45,7 @@ function MainLayout() {
           <Route path="/admin/login" element={<AdminLogin />} />
         </Routes>
       </main>
-      <Footer />
+      {!isAdminRoute && <Footer />}
     </div>
   );
 }
