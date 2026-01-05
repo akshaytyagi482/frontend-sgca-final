@@ -585,7 +585,7 @@ const resolveImageUrl = (img?: string) => {
           onClick={() => { setActivePage(page as any); setSidebarOpen(false); }}
           className={`w-full flex items-center justify-between px-2 py-1 rounded-md text-xs font-medium ${
             (activePage as string) === page
-              ? 'bg-orange-100 text-orange-600'
+              ? 'bg-blue-100 text-blud-600'
               : 'text-gray-700 hover:bg-gray-100'
           }`}
         >
@@ -601,7 +601,7 @@ const resolveImageUrl = (img?: string) => {
                   onClick={() => { setActiveSection(section.key); setSidebarOpen(false); }}
                   className={`w-full text-left px-3 py-1.5 text-xs rounded ${
                     activeSection === section.key
-                      ? 'bg-orange-50 text-orange-600'
+                      ? 'bg-blue-50 text-blue-600'
                       : 'text-gray-600 hover:bg-gray-100'
                   }`}
                 >
