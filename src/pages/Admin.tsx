@@ -553,7 +553,7 @@ const resolveImageUrl = (img?: string) => {
 
     {/* SIDEBAR */}
     <aside className={`w-64 min-h-screen bg-white border-r fixed z-50 md:relative md:z-auto transition-transform duration-300 ease-in-out ${isMobile ? (sidebarOpen ? 'translate-x-0' : '-translate-x-full') : 'translate-x-0'}`}>
-      <div className="p-4 text-xl font-bold text-orange-600">
+      <div className="p-4 text-xl font-bold text-blue-600">
         Admin Panel
       </div>
 
@@ -564,7 +564,7 @@ const resolveImageUrl = (img?: string) => {
         onClick={() => { setActivePage('dashboard'); setSidebarOpen(false); }}
         className={`w-full flex items-center justify-between px-2 py-1 rounded-md text-xs font-medium ${
           activePage === 'dashboard'
-            ? 'bg-orange-100 text-orange-600'
+            ? 'bg-blue-100 text-blue-600'
             : 'text-gray-700 hover:bg-gray-100'
         }`}
       >
@@ -643,7 +643,7 @@ const resolveImageUrl = (img?: string) => {
           onClick={() => setActivePage(page as any)}
           className={`w-full flex items-center justify-between px-4 py-2 rounded-md text-sm font-medium ${
             activePage === page
-              ? 'bg-orange-100 text-orange-600'
+              ? 'bg-blue-100 text-blue-600'
               : 'text-gray-700 hover:bg-gray-100'
           }`}
         >
@@ -659,7 +659,7 @@ const resolveImageUrl = (img?: string) => {
                 onClick={() => setActiveSection(section.key)}
                 className={`w-full text-left px-3 py-1.5 text-sm rounded ${
                   activeSection === section.key
-                    ? 'bg-orange-50 text-orange-600'
+                    ? 'bg-blue-50 text-blue-600'
                     : 'text-gray-600 hover:bg-gray-100'
                 }`}
               >
@@ -683,7 +683,7 @@ const resolveImageUrl = (img?: string) => {
       onTouchEnd={isMobile ? handleTouchEnd : undefined}
     >
       {/* TOP BAR */}
-      <header className="h-14 bg-orange-500 text-white flex items-center justify-between px-6">
+      <header className="h-14 bg-blue-500 text-white flex items-center justify-between px-6">
         <h1 className="font-semibold">Dashboard</h1>
         <div className="flex items-center gap-4">
           <span>admin</span>
@@ -3879,7 +3879,7 @@ const resolveImageUrl = (img?: string) => {
         <div className="border-t bg-white p-4 text-right">
           <button
             onClick={handleSave}
-            className="px-6 py-2 bg-orange-500 text-white rounded hover:bg-orange-600"
+            className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
           >
             Save Changes
           </button>
